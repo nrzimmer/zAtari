@@ -12,38 +12,22 @@
 //PHA
 
 void M6507::PHA() {
-    this->MemoryWrite(256 + this->S(), this->A());
-    if (this->S() == 0)
-        this->S(255);
-    else
-        this->S(this->S() - 1);
+    this->push_stack(this->A());
 }
 //PLA
 
 void M6507::PLA() {
-    if (this->S() == 255)
-        this->S(0);
-    else
-        this->S(this->S() + 1);
-    this->A(this->MemoryRead(256 + this->S()));
+    this->A(this->pop_stack());
 }
 //PHP
 
 void M6507::PHP() {
-    this->MemoryWrite(256 + this->S(), this->P());
-    if (this->S() == 0)
-        this->S(255);
-    else
-        this->S(this->S() - 1);
+    this->push_stack(this->P());
 }
 //PLP
 
 void M6507::PLP() {
-    if (this->S() == 255)
-        this->S(0);
-    else
-        this->S(this->S() + 1);
-    this->P(this->MemoryRead(256 + this->S()));
+    this->P(this->pop_stack());
 }
 
 

@@ -8,6 +8,7 @@
 #include <cstdlib>
 #include <cstdio>
 #include <math.h>
+#include "util.h"
 
 using namespace std;
 
@@ -15,12 +16,7 @@ using namespace std;
  * 
  */
 int main(int argc, char** argv) {
-    int a,b,c;
-    a = b = 1;
-    b |= (1 << 2);
-    c = b;
-    c &= ~(1 << 0);
-    printf("%i\n%i\n%i\n",a,b,c);
+    printf("%i\n%i,%i\n",make_word(1,2),lo_byte(make_word(1,2)),hi_byte(make_word(1,2)));
     scanf("%s");
     return 0;
 }

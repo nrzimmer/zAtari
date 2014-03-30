@@ -39,11 +39,16 @@ protected:
     //bloco de 8K de memoria (para replicação)
     char memory_block[2^13];
     
+    //Metodos genericos usados internamente
     void update_zero_flag(char valor);
     void update_negative_flag(char valor);
     void update_overflow_flag(short int valor);
     void update_carry_flag(short int valor);
-    //
+    void push_stack(char valor);
+    char pop_stack();
+    void ADC(char valor);
+    void SBC(char valor);
+    void CMP(char val1, char val2);
 public:
     //Metodos de manipulação da memória
     char MemoryRead(unsigned short int addr);
@@ -333,4 +338,20 @@ void M6507::MemoryWrite(unsigned short int addr, char valor) {
     if (addr < 0)
         addr += 8192;
     this->memory_block[addr] = valor;
+}
+
+char M6507::pop_stack() {
+    if (this->S() == 255)
+        this->S(0);
+    else
+        this->S(this->S() + 1);
+    return this->MemoryRead(256 + this->S());
+}
+
+void M6507::push_stack(char valor) {
+    this->MemoryWrite(256 + this->S(), valor);
+    if (this->S() == 0)
+        this->S(255);
+    else
+        this->S(this->S() - 1);
 }

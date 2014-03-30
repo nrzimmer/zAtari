@@ -9,9 +9,8 @@
         <group>
             <file>file:/C:/Users/NatanaelRodrigo/Documents/NetBeansProjects/zAtari/main.cpp</file>
             <file>file:/C:/Users/NatanaelRodrigo/Documents/NetBeansProjects/zAtari/M6507.h</file>
-            <file>file:/C:/Users/NatanaelRodrigo/Documents/NetBeansProjects/zAtari/M6507_Reg_Operations.h</file>
-            <file>file:/C:/Users/NatanaelRodrigo/Documents/NetBeansProjects/zAtari/M6507_Load_Store.h</file>
-            <file>file:/C:/Users/NatanaelRodrigo/Documents/NetBeansProjects/zAtari/M6507.cpp</file>
+            <file>file:/C:/Users/NatanaelRodrigo/Documents/NetBeansProjects/zAtari/M6507_Stack_Opcodes.h</file>
+            <file>file:/C:/Users/NatanaelRodrigo/Documents/NetBeansProjects/zAtari/util.h</file>
         </group>
     </open-files>
 </project-private>
