@@ -18,6 +18,8 @@
 
 class M6507 {
 protected:
+    //Constantes
+    unsigned char RIOT_IO[8];
     //Variaveis dos registradores
     bool reg_carry;
     bool reg_zero;
@@ -337,16 +339,180 @@ unsigned char M6507::MemoryRead(unsigned short int addr) {
 }
 
 void M6507::MemoryWrite(unsigned short int addr, char valor) {
+    unsigned char lo, hi;
     while (addr > 0x1FFF)
         addr -= 0x2000;
     if (addr < 0)
         addr += 0x2000;
-    this->memory_block[addr] = valor;
+    lo = lo_byte(addr);
+    hi = hi_byte(addr);
+    /*
+     * RIOT RAM and mirrors
+     * $0D80 - $0DFF = mirror of the RIOT RAM
+     * $0C80 - $0CFF = mirror of the RIOT RAM
+     * $0980 - $09FF = mirror of the RIOT RAM
+     * $0880 - $08FF = mirror of the RIOT RAM
+     * $0580 - $05FF = mirror of the RIOT RAM
+     * $0480 - $04FF = mirror of the RIOT RAM
+     * $0180 - $01FF = mirror of the RIOT RAM (used by the 6507 for its stack memory)
+     * $0080 - $00FF = 128 bytes of RIOT RAM
+     * 
+     * xxx0 xx0x  1??? ????
+     */
+    if ((!get_bit(hi, 1)) & (!get_bit(hi, 4)) & (get_bit(lo, 7))) {
+        hi = 0;
+        addr = make_word(lo, hi);
+        this->memory_block[addr] = valor;
+        this->memory_block[addr + 0x100] = valor;
+        this->memory_block[addr + 0x400] = valor;
+        this->memory_block[addr + 0x500] = valor;
+        this->memory_block[addr + 0x800] = valor;
+        this->memory_block[addr + 0x900] = valor;
+        this->memory_block[addr + 0xC00] = valor;
+        this->memory_block[addr + 0xD00] = valor;
+    } else {
+        /*
+         * RIOT's IO
+         * $0Fxx, $0Exx, $0Bxx, $0Axx, $07xx, $06xx, $03xx = same mirrors as $02xx shown below
+         * $02F8 - $02FB = mirror of $0280 - $0283
+         * $02F0 - $02F3 = mirror of $0280 - $0283
+         * $02E8 - $02EB = mirror of $0280 - $0283
+         * $02E0 - $02E3 = mirror of $0280 - $0283
+         * $02D8 - $02DB = mirror of $0280 - $0283
+         * $02D0 - $02D3 = mirror of $0280 - $0283
+         * $02C8 - $02CB = mirror of $0280 - $0283
+         * $02C0 - $02C3 = mirror of $0280 - $0283
+         * $02B8 - $02BB = mirror of $0280 - $0283
+         * $02B0 - $02B3 = mirror of $0280 - $0283
+         * $02A8 - $02AB = mirror of $0280 - $0283
+         * $02A0 - $02A3 = mirror of $0280 - $0283
+         * $0298 - $029B = mirror of $0280 - $0283
+         * $0290 - $0293 = mirror of $0280 - $0283
+         * $0288 - $028B = mirror of $0280 - $0283
+         * $0283 = data-direction control for I/O register B
+         * $0282 = I/O register B
+         * $0281 = data-direction control for I/O register A
+         * $0280 = I/O register A
+         * 
+         * xxx0 xx1x 1xxx x0??
+         */
+        if ((!get_bit(hi, 4)) & (get_bit(hi, 1)) & (get_bit(lo, 7)) & (!get_bit(lo, 2))) {
+            int loop1, loop2;
+            for (loop1 = 0; loop1 < 8; loop1++) {
+                hi = this->RIOT_IO[loop1];
+                lo = 0x80 | get_bit(lo, 0) | (get_bit(lo, 1) << 1);
+                addr = make_word(lo, hi);
+                for (loop2 = 1; loop2 < 16; loop2++) {
+                    this->memory_block[addr + 8 * loop2] = valor;
+                }
+            }
+        } else {
+            /*
+             * $0Fxx, $0Exx, $0Bxx, $0Axx, $07xx, $06xx, $03xx = same mirrors as $02xx shown below
+             * $02FC - $02FF = mirror of $029C - $029F
+             * $02F4 - $02F7 = mirror of $0294 - $0297
+             * $02DC - $02DF = mirror of $029C - $029F
+             * $02D4 - $02D7 = mirror of $0294 - $0297
+             * $02BC - $02BF = mirror of $029C - $029F
+             * $02B4 - $02B7 = mirror of $0294 - $0297
+             * $029F = enable the timer interrupt and set the timer using the 1024-cycle interval
+             * $029E = enable the timer interrupt and set the timer using the 64-cycle interval
+             * $029D = enable the timer interrupt and set the timer using the 8-cycle interval
+             * $029C = enable the timer interrupt and set the timer using the 1-cycle interval
+             * $0297 = disable the timer interrupt and set the timer using the 1024-cycle interval
+             * $0296 = disable the timer interrupt and set the timer using the 64-cycle interval
+             * $0295 = disable the timer interrupt and set the timer using the 8-cycle interval
+             * $0294 = disable the timer interrupt and set the timer using the 1-cycle interval
+             * xxx0 xx1x 1xx1 ?1??
+             */
+            if ((!get_bit(hi, 4)) & (get_bit(hi, 1)) & (get_bit(lo, 7)) & (get_bit(lo, 4)) & (get_bit(lo, 2))) {
+                int loop1, loop2;
+                for (loop1 = 0; loop1 < 8; loop1++) {
+                    hi = this->RIOT_IO[loop1];
+                    lo = 0x94 | get_bit(lo, 0) | (get_bit(lo, 1) << 1) | (get_bit(lo, 3) << 3);
+                    addr = make_word(lo, hi);
+                    for (loop2 = 1; loop2 < 8; loop2++) {
+                        this->memory_block[addr + 0x20 * loop2] = valor;
+                    }
+                }
+            } else {
+                /*
+                 * $0Fxx, $0Exx, $0Bxx, $0Axx, $07xx, $06xx, $03xx = same mirrors as $02xx shown below
+                 * $02Ax - $02Fx = same mirrors as $029x shown below
+                 * $029E, $029C, $0296, $0294 = mirrors of $028E, $028C, $0286, and $0284
+                 * $028E = mirror of $028C
+                 * $028C = enable the timer interrupt and read the timer
+                 * $0286 = mirror of $0284
+                 * $0284 = disable the timer interrupt and read the timer
+                 * xxx0 xx1x 1xxx ?1x0
+                 */
+                if ((!get_bit(hi, 4)) & (get_bit(hi, 1)) & (get_bit(lo, 7)) & (get_bit(lo, 2)) & (!get_bit(lo, 0))) {
+                    int loop1, loop2;
+                    for (loop1 = 0; loop1 < 8; loop1++) {
+                        hi = this->RIOT_IO[loop1];
+                        lo = 0x84 | (get_bit(lo, 3) << 3);
+                        addr = make_word(lo, hi);
+                        for (loop2 = 1; loop2 < 8; loop2++) {
+                            this->memory_block[addr + (0x10 * loop2)] = valor;
+                            this->memory_block[addr + (0x10 * loop2) + 2] = valor;
+                        }
+                    }
+
+                } else {
+                    /*
+                     * $0Fxx, $0Exx, $0Bxx, $0Axx, $07xx, $06xx, $03xx = same mirrors as $02xx shown below
+                     * $029x - $02Fx = same mirrors as $028x shown below
+                     * $028F, $028D, $0287 = mirrors of $0285
+                     * $0285 = read the interrupt flags
+                     * xxx0 xx1x 1xxx x1x1
+                     */
+                    if ((!get_bit(hi, 4)) & (get_bit(hi, 1)) & (get_bit(lo, 7)) & (get_bit(lo, 2)) & (get_bit(lo, 0))) {
+                        int loop1, loop2;
+                        for (loop1 = 0; loop1 < 8; loop1++) {
+                            hi = this->RIOT_IO[loop1];
+                            lo = 0x84 | (get_bit(lo, 3) << 3);
+                            addr = make_word(lo, hi);
+                            for (loop2 = 1; loop2 < 8; loop2++) {
+                                this->memory_block[addr + (0x10 * loop2)] = valor;
+                                this->memory_block[addr + (0x10 * loop2) + 2] = valor;
+                                this->memory_block[addr + (0x10 * loop2) + 8] = valor;
+                                this->memory_block[addr + (0x10 * loop2) + 10] = valor;
+                            }
+                        }
+                    } else {
+                        /*
+                         * $0Fxx, $0Exx, $0Bxx, $0Axx, $07xx, $06xx, $03xx = same mirrors as $02xx shown below
+                         * $02Ax, $02Cx, $02Ex = same mirrors as $028x shown below
+                         * $028C - $028F = mirrors of $0284 - $0287
+                         * $0287 = enable the PA7 interrupt and select positive edge-detect
+                         * $0286 = enable the PA7 interrupt and select negative edge-detect
+                         * $0285 = disable the PA7 interrupt and select positive edge-detect
+                         * $0284 = disable the PA7 interrupt and select negative edge-detect
+                         * xxx0 xx1x 1xx0 x1??
+                         */
+                        if ((!get_bit(hi, 4)) & (get_bit(hi, 1)) & (get_bit(lo, 7)) & (!get_bit(lo, 4)) & (get_bit(lo, 2))) {
+                            int loop1, loop2;
+                            for (loop1 = 0; loop1 < 8; loop1++) {
+                                hi = this->RIOT_IO[loop1];
+                                lo = 0x84 | get_bit(lo, 0) | (get_bit(lo, 1) << 1);
+                                addr = make_word(lo, hi);
+                                for (loop2 = 1; loop2 < 6; loop2++) {
+                                    this->memory_block[addr + (0x20 * loop2)] = valor;
+                                    this->memory_block[addr + (0x20 * loop2) + 8] = valor;
+                                }
+                            }
+                        } else
+                            this->memory_block[addr] = valor;
+                    }
+                }
+            }
+        }
+    }
 }
 
 unsigned char M6507::pop_stack() {
     unsigned char sp = this->S();
-    sp -=1;
+    sp -= 1;
     this->S(sp);
     return this->MemoryRead(511 - sp);
 }
@@ -354,7 +520,7 @@ unsigned char M6507::pop_stack() {
 void M6507::push_stack(unsigned char valor) {
     unsigned char sp = this->S();
     this->MemoryWrite(511 - sp, valor);
-    sp +=1;
+    sp += 1;
     this->S(sp);
 }
 
@@ -388,6 +554,14 @@ M6507::M6507(char ROM[4096]) {
     this->reg_p = 0;
     this->reg_pc = make_word(this->MemoryRead(0xFFFC), this->MemoryRead(0xFFFD));
     this->last_instruction = 0;
+    this->RIOT_IO[0] = 0x02;
+    this->RIOT_IO[1] = 0x03;
+    this->RIOT_IO[2] = 0x06;
+    this->RIOT_IO[3] = 0x07;
+    this->RIOT_IO[4] = 0x0A;
+    this->RIOT_IO[5] = 0x0B;
+    this->RIOT_IO[6] = 0x0E;
+    this->RIOT_IO[7] = 0x0F;
 }
 
 void M6507::step() {
@@ -400,264 +574,264 @@ void M6507::step() {
             lo = MemoryRead(PC());
             inc_pc();
             hi = MemoryRead(PC());
-            LDA_absolute(make_word(lo, hi));
             inc_pc();
+            LDA_absolute(make_word(lo, hi));
             break;
         case 0xBD:
             lo = MemoryRead(PC());
             inc_pc();
             hi = MemoryRead(PC());
-            LDA_absolute_X(make_word(lo, hi));
             inc_pc();
+            LDA_absolute_X(make_word(lo, hi));
             break;
         case 0xB9:
             lo = MemoryRead(PC());
             inc_pc();
             hi = MemoryRead(PC());
-            LDA_absolute_Y(make_word(lo, hi));
             inc_pc();
+            LDA_absolute_Y(make_word(lo, hi));
             break;
         case 0xA9:
-            LDA_imediate(MemoryRead(PC())); //A2
+            LDA_imediate(MemoryRead(PC()));
             inc_pc();
             break;
         case 0xA5:
-            LDA_zeropage(MemoryRead(PC())); //A2
+            LDA_zeropage(MemoryRead(PC()));
             inc_pc();
             break;
         case 0xA1:
-            LDA_zeropage_indirect_X(MemoryRead(PC())); //A2
+            LDA_zeropage_indirect_X(MemoryRead(PC()));
             inc_pc();
             break;
         case 0xB5:
-            LDA_zeropage_X(MemoryRead(PC())); //A2
+            LDA_zeropage_X(MemoryRead(PC()));
             inc_pc();
             break;
         case 0xB1:
-            LDA_zeropage_indirect_Y(MemoryRead(PC())); //A2
+            LDA_zeropage_indirect_Y(MemoryRead(PC()));
             inc_pc();
             break;
         case 0xAE:
             lo = MemoryRead(PC());
             inc_pc();
             hi = MemoryRead(PC());
-            LDX_absolute(make_word(lo, hi));
             inc_pc();
+            LDX_absolute(make_word(lo, hi));
             break;
         case 0xBE:
             lo = MemoryRead(PC());
             inc_pc();
             hi = MemoryRead(PC());
-            LDX_absolute_Y(make_word(lo, hi));
             inc_pc();
+            LDX_absolute_Y(make_word(lo, hi));
             break;
         case 0xA2:
-            LDX_imediate(MemoryRead(PC())); //A2
+            LDX_imediate(MemoryRead(PC()));
             inc_pc();
             break;
         case 0xA6:
-            LDX_zeropage(MemoryRead(PC())); //A2
+            LDX_zeropage(MemoryRead(PC()));
             inc_pc();
             break;
         case 0xB6:
-            LDX_zeropage_Y(MemoryRead(PC())); //A2
+            LDX_zeropage_Y(MemoryRead(PC()));
             inc_pc();
             break;
         case 0xAC:
             lo = MemoryRead(PC());
             inc_pc();
             hi = MemoryRead(PC());
-            LDY_absolute(make_word(lo, hi));
             inc_pc();
+            LDY_absolute(make_word(lo, hi));
             break;
         case 0xBC:
             lo = MemoryRead(PC());
             inc_pc();
             hi = MemoryRead(PC());
-            LDY_absolute_X(make_word(lo, hi));
             inc_pc();
+            LDY_absolute_X(make_word(lo, hi));
             break;
         case 0xA0:
-            LDY_imediate(MemoryRead(PC())); //A2
+            LDY_imediate(MemoryRead(PC()));
             inc_pc();
             break;
         case 0xA4:
-            LDY_zeropage(MemoryRead(PC())); //A2
+            LDY_zeropage(MemoryRead(PC()));
             inc_pc();
             break;
         case 0xB4:
-            LDY_zeropage_X(MemoryRead(PC())); //A2
+            LDY_zeropage_X(MemoryRead(PC()));
             inc_pc();
             break;
         case 0x8D:
             lo = MemoryRead(PC());
             inc_pc();
             hi = MemoryRead(PC());
-            STA_absolute(make_word(lo, hi));
             inc_pc();
+            STA_absolute(make_word(lo, hi));
             break;
         case 0x9D:
             lo = MemoryRead(PC());
             inc_pc();
             hi = MemoryRead(PC());
-            STA_absolute_X(make_word(lo, hi));
             inc_pc();
+            STA_absolute_X(make_word(lo, hi));
             break;
         case 0x99:
             lo = MemoryRead(PC());
             inc_pc();
             hi = MemoryRead(PC());
-            STA_absolute_Y(make_word(lo, hi));
             inc_pc();
+            STA_absolute_Y(make_word(lo, hi));
             break;
         case 0x85:
-            STA_zeropage(MemoryRead(PC())); //A2
+            STA_zeropage(MemoryRead(PC()));
             inc_pc();
             break;
         case 0x81:
-            STA_zeropage_indirect_X(MemoryRead(PC())); //A2
+            STA_zeropage_indirect_X(MemoryRead(PC()));
             inc_pc();
             break;
         case 0x95:
-            STA_zeropage_X(MemoryRead(PC())); //A2
+            STA_zeropage_X(MemoryRead(PC()));
             inc_pc();
             break;
         case 0x91:
-            STA_zeropage_indirect_Y(MemoryRead(PC())); //A2
+            STA_zeropage_indirect_Y(MemoryRead(PC()));
             inc_pc();
             break;
         case 0x8E:
             lo = MemoryRead(PC());
             inc_pc();
             hi = MemoryRead(PC());
-            STX_absolute(make_word(lo, hi));
             inc_pc();
+            STX_absolute(make_word(lo, hi));
             break;
         case 0x86:
-            STX_zeropage(MemoryRead(PC())); //A2
+            STX_zeropage(MemoryRead(PC()));
             inc_pc();
             break;
         case 0x96:
-            STX_zeropage_Y(MemoryRead(PC())); //A2
+            STX_zeropage_Y(MemoryRead(PC()));
             inc_pc();
             break;
         case 0x8C:
             lo = MemoryRead(PC());
             inc_pc();
             hi = MemoryRead(PC());
-            STY_absolute(make_word(lo, hi));
             inc_pc();
+            STY_absolute(make_word(lo, hi));
             break;
         case 0x84:
-            STY_zeropage(MemoryRead(PC())); //A2
+            STY_zeropage(MemoryRead(PC()));
             inc_pc();
             break;
         case 0x94:
-            STY_zeropage_X(MemoryRead(PC())); //A2
+            STY_zeropage_X(MemoryRead(PC()));
             inc_pc();
             break;
         case 0x6D:
             lo = MemoryRead(PC());
             inc_pc();
             hi = MemoryRead(PC());
-            ADC_absolute(make_word(lo, hi));
             inc_pc();
+            ADC_absolute(make_word(lo, hi));
             break;
         case 0x7D:
             lo = MemoryRead(PC());
             inc_pc();
             hi = MemoryRead(PC());
-            ADC_absolute_X(make_word(lo, hi));
             inc_pc();
+            ADC_absolute_X(make_word(lo, hi));
             break;
         case 0x79:
             lo = MemoryRead(PC());
             inc_pc();
             hi = MemoryRead(PC());
-            ADC_absolute_Y(make_word(lo, hi));
             inc_pc();
+            ADC_absolute_Y(make_word(lo, hi));
             break;
         case 0x69:
-            ADC_imediate(MemoryRead(PC())); //A2
+            ADC_imediate(MemoryRead(PC()));
             inc_pc();
             break;
         case 0x65:
-            ADC_zeropage(MemoryRead(PC())); //A2
+            ADC_zeropage(MemoryRead(PC()));
             inc_pc();
             break;
         case 0x61:
-            ADC_zeropage_indirect_X(MemoryRead(PC())); //A2
+            ADC_zeropage_indirect_X(MemoryRead(PC()));
             inc_pc();
             break;
         case 0x75:
-            ADC_zeropage_X(MemoryRead(PC())); //A2
+            ADC_zeropage_X(MemoryRead(PC()));
             inc_pc();
             break;
         case 0x71:
-            ADC_zeropage_indirect_X(MemoryRead(PC())); //A2
+            ADC_zeropage_indirect_X(MemoryRead(PC()));
             inc_pc();
             break;
         case 0xED:
             lo = MemoryRead(PC());
             inc_pc();
             hi = MemoryRead(PC());
-            SBC_absolute(make_word(lo, hi));
             inc_pc();
+            SBC_absolute(make_word(lo, hi));
             break;
         case 0xFD:
             lo = MemoryRead(PC());
             inc_pc();
             hi = MemoryRead(PC());
-            SBC_absolute_X(make_word(lo, hi));
             inc_pc();
+            SBC_absolute_X(make_word(lo, hi));
             break;
         case 0xF9:
             lo = MemoryRead(PC());
             inc_pc();
             hi = MemoryRead(PC());
-            SBC_absolute_Y(make_word(lo, hi));
             inc_pc();
+            SBC_absolute_Y(make_word(lo, hi));
             break;
         case 0xE9:
-            SBC_imediate(MemoryRead(PC())); //A2
+            SBC_imediate(MemoryRead(PC()));
             inc_pc();
             break;
         case 0xE5:
-            SBC_zeropage(MemoryRead(PC())); //A2
+            SBC_zeropage(MemoryRead(PC()));
             inc_pc();
             break;
         case 0xE1:
-            SBC_zeropage_indirect_X(MemoryRead(PC())); //A2
+            SBC_zeropage_indirect_X(MemoryRead(PC()));
             inc_pc();
             break;
         case 0xF5:
-            SBC_zeropage_X(MemoryRead(PC())); //A2
+            SBC_zeropage_X(MemoryRead(PC()));
             inc_pc();
             break;
         case 0xF1:
-            SBC_zeropage_indirect_Y(MemoryRead(PC())); //A2
+            SBC_zeropage_indirect_Y(MemoryRead(PC()));
             inc_pc();
             break;
         case 0xEE:
             lo = MemoryRead(PC());
             inc_pc();
             hi = MemoryRead(PC());
-            INC_absolute(make_word(lo, hi));
             inc_pc();
+            INC_absolute(make_word(lo, hi));
             break;
         case 0xFE:
             lo = MemoryRead(PC());
             inc_pc();
             hi = MemoryRead(PC());
-            INC_absolute_X(make_word(lo, hi));
             inc_pc();
+            INC_absolute_X(make_word(lo, hi));
             break;
         case 0xE6:
-            INC_zeropage(MemoryRead(PC())); //A2
+            INC_zeropage(MemoryRead(PC()));
             inc_pc();
             break;
         case 0xF6:
-            INC_zeropage_X(MemoryRead(PC())); //A2
+            INC_zeropage_X(MemoryRead(PC()));
             inc_pc();
             break;
         case 0xE8:
@@ -670,22 +844,22 @@ void M6507::step() {
             lo = MemoryRead(PC());
             inc_pc();
             hi = MemoryRead(PC());
-            DEC_absolute(make_word(lo, hi));
             inc_pc();
+            DEC_absolute(make_word(lo, hi));
             break;
         case 0xDE:
             lo = MemoryRead(PC());
             inc_pc();
             hi = MemoryRead(PC());
-            DEC_absolute_X(make_word(lo, hi));
             inc_pc();
+            DEC_absolute_X(make_word(lo, hi));
             break;
         case 0xC6:
-            DEC_zeropage(MemoryRead(PC())); //A2
+            DEC_zeropage(MemoryRead(PC()));
             inc_pc();
             break;
         case 0xD6:
-            DEC_zeropage_X(MemoryRead(PC())); //A2
+            DEC_zeropage_X(MemoryRead(PC()));
             inc_pc();
             break;
         case 0xCA:
@@ -701,22 +875,22 @@ void M6507::step() {
             lo = MemoryRead(PC());
             inc_pc();
             hi = MemoryRead(PC());
-            ASL_absolute(make_word(lo, hi));
             inc_pc();
+            ASL_absolute(make_word(lo, hi));
             break;
         case 0x1E:
             lo = MemoryRead(PC());
             inc_pc();
             hi = MemoryRead(PC());
-            ASL_absolute_X(make_word(lo, hi));
             inc_pc();
+            ASL_absolute_X(make_word(lo, hi));
             break;
         case 0x06:
-            ASL_zeropage(MemoryRead(PC())); //A2
+            ASL_zeropage(MemoryRead(PC()));
             inc_pc();
             break;
         case 0x16:
-            ASL_zeropage_X(MemoryRead(PC())); //A2
+            ASL_zeropage_X(MemoryRead(PC()));
             inc_pc();
             break;
         case 0x4A:
@@ -726,22 +900,22 @@ void M6507::step() {
             lo = MemoryRead(PC());
             inc_pc();
             hi = MemoryRead(PC());
-            LSR_absolute(make_word(lo, hi));
             inc_pc();
+            LSR_absolute(make_word(lo, hi));
             break;
         case 0x5E:
             lo = MemoryRead(PC());
             inc_pc();
             hi = MemoryRead(PC());
-            LSR_absolute_X(make_word(lo, hi));
             inc_pc();
+            LSR_absolute_X(make_word(lo, hi));
             break;
         case 0x46:
-            LSR_zeropage(MemoryRead(PC())); //A2
+            LSR_zeropage(MemoryRead(PC()));
             inc_pc();
             break;
         case 0x56:
-            LSR_zeropage_X(MemoryRead(PC())); //A2
+            LSR_zeropage_X(MemoryRead(PC()));
             inc_pc();
             break;
         case 0x2A:
@@ -751,22 +925,22 @@ void M6507::step() {
             lo = MemoryRead(PC());
             inc_pc();
             hi = MemoryRead(PC());
-            ROL_absolute(make_word(lo, hi));
             inc_pc();
+            ROL_absolute(make_word(lo, hi));
             break;
         case 0x3E:
             lo = MemoryRead(PC());
             inc_pc();
             hi = MemoryRead(PC());
-            ROL_absolute_X(make_word(lo, hi));
             inc_pc();
+            ROL_absolute_X(make_word(lo, hi));
             break;
         case 0x26:
-            ROL_zeropage(MemoryRead(PC())); //A2
+            ROL_zeropage(MemoryRead(PC()));
             inc_pc();
             break;
         case 0x36:
-            ROL_zeropage_X(MemoryRead(PC())); //A2
+            ROL_zeropage_X(MemoryRead(PC()));
             inc_pc();
             break;
         case 0x6A:
@@ -776,263 +950,263 @@ void M6507::step() {
             lo = MemoryRead(PC());
             inc_pc();
             hi = MemoryRead(PC());
-            ROR_absolute(make_word(lo, hi));
             inc_pc();
+            ROR_absolute(make_word(lo, hi));
             break;
         case 0x7E:
             lo = MemoryRead(PC());
             inc_pc();
             hi = MemoryRead(PC());
-            ROR_absolute_X(make_word(lo, hi));
             inc_pc();
+            ROR_absolute_X(make_word(lo, hi));
             break;
         case 0x66:
-            ROR_zeropage(MemoryRead(PC())); //A2
+            ROR_zeropage(MemoryRead(PC()));
             inc_pc();
             break;
         case 0x76:
-            ROR_zeropage_X(MemoryRead(PC())); //A2
+            ROR_zeropage_X(MemoryRead(PC()));
             inc_pc();
             break;
         case 0x2D:
             lo = MemoryRead(PC());
             inc_pc();
             hi = MemoryRead(PC());
-            AND_absolute(make_word(lo, hi));
             inc_pc();
+            AND_absolute(make_word(lo, hi));
             break;
         case 0x3D:
             lo = MemoryRead(PC());
             inc_pc();
             hi = MemoryRead(PC());
-            AND_absolute_X(make_word(lo, hi));
             inc_pc();
+            AND_absolute_X(make_word(lo, hi));
             break;
         case 0x39:
             lo = MemoryRead(PC());
             inc_pc();
             hi = MemoryRead(PC());
-            AND_absolute_Y(make_word(lo, hi));
             inc_pc();
+            AND_absolute_Y(make_word(lo, hi));
             break;
         case 0x29:
-            AND_imediate(MemoryRead(PC())); //A2
+            AND_imediate(MemoryRead(PC()));
             inc_pc();
             break;
         case 0x25:
-            AND_zeropage(MemoryRead(PC())); //A2
+            AND_zeropage(MemoryRead(PC()));
             inc_pc();
             break;
         case 0x21:
-            AND_zeropage_indirect_X(MemoryRead(PC())); //A2
+            AND_zeropage_indirect_X(MemoryRead(PC()));
             inc_pc();
             break;
         case 0x35:
-            AND_zeropage_X(MemoryRead(PC())); //A2
+            AND_zeropage_X(MemoryRead(PC()));
             inc_pc();
             break;
         case 0x31:
-            AND_zeropage_indirect_Y(MemoryRead(PC())); //A2
+            AND_zeropage_indirect_Y(MemoryRead(PC()));
             inc_pc();
             break;
         case 0x0D:
             lo = MemoryRead(PC());
             inc_pc();
             hi = MemoryRead(PC());
-            ORA_absolute(make_word(lo, hi));
             inc_pc();
+            ORA_absolute(make_word(lo, hi));
             break;
         case 0x1D:
             lo = MemoryRead(PC());
             inc_pc();
             hi = MemoryRead(PC());
-            ORA_absolute_X(make_word(lo, hi));
             inc_pc();
+            ORA_absolute_X(make_word(lo, hi));
             break;
         case 0x19:
             lo = MemoryRead(PC());
             inc_pc();
             hi = MemoryRead(PC());
-            ORA_absolute_Y(make_word(lo, hi));
             inc_pc();
+            ORA_absolute_Y(make_word(lo, hi));
             break;
         case 0x09:
-            ORA_imediate(MemoryRead(PC())); //A2
+            ORA_imediate(MemoryRead(PC()));
             inc_pc();
             break;
         case 0x05:
-            ORA_zeropage(MemoryRead(PC())); //A2
+            ORA_zeropage(MemoryRead(PC()));
             inc_pc();
             break;
         case 0x01:
-            ORA_zeropage_indirect_X(MemoryRead(PC())); //A2
+            ORA_zeropage_indirect_X(MemoryRead(PC()));
             inc_pc();
             break;
         case 0x15:
-            ORA_zeropage_X(MemoryRead(PC())); //A2
+            ORA_zeropage_X(MemoryRead(PC()));
             inc_pc();
             break;
         case 0x11:
-            ORA_zeropage_indirect_Y(MemoryRead(PC())); //A2
+            ORA_zeropage_indirect_Y(MemoryRead(PC()));
             inc_pc();
             break;
         case 0x4D:
             lo = MemoryRead(PC());
             inc_pc();
             hi = MemoryRead(PC());
-            EOR_absolute(make_word(lo, hi));
             inc_pc();
+            EOR_absolute(make_word(lo, hi));
             break;
         case 0x5D:
             lo = MemoryRead(PC());
             inc_pc();
             hi = MemoryRead(PC());
-            EOR_absolute_X(make_word(lo, hi));
             inc_pc();
+            EOR_absolute_X(make_word(lo, hi));
             break;
         case 0x49:
             lo = MemoryRead(PC());
             inc_pc();
             hi = MemoryRead(PC());
-            EOR_absolute_Y(make_word(lo, hi));
             inc_pc();
+            EOR_absolute_Y(make_word(lo, hi));
             break;
         case 0x59:
-            EOR_imediate(MemoryRead(PC())); //A2
+            EOR_imediate(MemoryRead(PC()));
             inc_pc();
             break;
         case 0x45:
-            EOR_zeropage(MemoryRead(PC())); //A2
+            EOR_zeropage(MemoryRead(PC()));
             inc_pc();
             break;
         case 0x41:
-            EOR_zeropage_indirect_X(MemoryRead(PC())); //A2
+            EOR_zeropage_indirect_X(MemoryRead(PC()));
             inc_pc();
             break;
         case 0x55:
-            EOR_zeropage_X(MemoryRead(PC())); //A2
+            EOR_zeropage_X(MemoryRead(PC()));
             inc_pc();
             break;
         case 0x51:
-            EOR_zeropage_indirect_Y(MemoryRead(PC())); //A2
+            EOR_zeropage_indirect_Y(MemoryRead(PC()));
             inc_pc();
             break;
         case 0xCD:
             lo = MemoryRead(PC());
             inc_pc();
             hi = MemoryRead(PC());
-            CMP_absolute(make_word(lo, hi));
             inc_pc();
+            CMP_absolute(make_word(lo, hi));
             break;
         case 0xDD:
             lo = MemoryRead(PC());
             inc_pc();
             hi = MemoryRead(PC());
-            CMP_absolute_X(make_word(lo, hi));
             inc_pc();
+            CMP_absolute_X(make_word(lo, hi));
             break;
         case 0xD9:
             lo = MemoryRead(PC());
             inc_pc();
             hi = MemoryRead(PC());
-            CMP_absolute_Y(make_word(lo, hi));
             inc_pc();
+            CMP_absolute_Y(make_word(lo, hi));
             break;
         case 0xC9:
-            CMP_imediate(MemoryRead(PC())); //A2
+            CMP_imediate(MemoryRead(PC()));
             inc_pc();
             break;
         case 0xC5:
-            CMP_zeropage(MemoryRead(PC())); //A2
+            CMP_zeropage(MemoryRead(PC()));
             inc_pc();
             break;
         case 0xC1:
-            CMP_zeropage_indirect_X(MemoryRead(PC())); //A2
+            CMP_zeropage_indirect_X(MemoryRead(PC()));
             inc_pc();
             break;
         case 0xD5:
-            CMP_zeropage_X(MemoryRead(PC())); //A2
+            CMP_zeropage_X(MemoryRead(PC()));
             inc_pc();
             break;
         case 0xD1:
-            CMP_zeropage_indirect_Y(MemoryRead(PC())); //A2
+            CMP_zeropage_indirect_Y(MemoryRead(PC()));
             inc_pc();
             break;
         case 0xEC:
             lo = MemoryRead(PC());
             inc_pc();
             hi = MemoryRead(PC());
-            CPX_absolute(make_word(lo, hi));
             inc_pc();
+            CPX_absolute(make_word(lo, hi));
             break;
         case 0xE0:
-            CPX_imediate(MemoryRead(PC())); //A2
+            CPX_imediate(MemoryRead(PC()));
             inc_pc();
             break;
         case 0xE4:
-            CPX_zeropage(MemoryRead(PC())); //A2
+            CPX_zeropage(MemoryRead(PC()));
             inc_pc();
             break;
         case 0xCC:
             lo = MemoryRead(PC());
             inc_pc();
             hi = MemoryRead(PC());
-            CPY_absolute(make_word(lo, hi));
             inc_pc();
+            CPY_absolute(make_word(lo, hi));
             break;
         case 0xC0:
-            CPY_imediate(MemoryRead(PC())); //A2
+            CPY_imediate(MemoryRead(PC()));
             inc_pc();
             break;
         case 0xC4:
-            CPY_zeropage(MemoryRead(PC())); //A2
+            CPY_zeropage(MemoryRead(PC()));
             inc_pc();
             break;
         case 0x2C:
             lo = MemoryRead(PC());
             inc_pc();
             hi = MemoryRead(PC());
-            BIT_absolute(make_word(lo, hi));
             inc_pc();
+            BIT_absolute(make_word(lo, hi));
             break;
         case 0x89:
-            BIT_imediate(MemoryRead(PC())); //A2
+            BIT_imediate(MemoryRead(PC()));
             inc_pc();
             break;
         case 0x24:
-            BIT_zeropage(MemoryRead(PC())); //A2
+            BIT_zeropage(MemoryRead(PC()));
             inc_pc();
             break;
         case 0x90:
-            BCC(MemoryRead(PC())); //A2
+            BCC(MemoryRead(PC()));
             inc_pc();
             break;
         case 0xB0:
-            BCS(MemoryRead(PC())); //A2
+            BCS(MemoryRead(PC()));
             inc_pc();
             break;
         case 0xF0:
-            BEQ(MemoryRead(PC())); //A2
+            BEQ(MemoryRead(PC()));
             inc_pc();
             break;
         case 0x30:
-            BMI(MemoryRead(PC())); //A2
+            BMI(MemoryRead(PC()));
             inc_pc();
             break;
         case 0xD0:
-            BNE(MemoryRead(PC())); //A2
+            BNE(MemoryRead(PC()));
             inc_pc();
             break;
         case 0x10:
-            BPL(MemoryRead(PC())); //A2
+            BPL(MemoryRead(PC()));
             inc_pc();
             break;
         case 0x50:
-            BVC(MemoryRead(PC())); //A2
+            BVC(MemoryRead(PC()));
             inc_pc();
             break;
         case 0x70:
-            BVS(MemoryRead(PC())); //A2
+            BVS(MemoryRead(PC()));
             inc_pc();
             break;
         case 0xAA:
