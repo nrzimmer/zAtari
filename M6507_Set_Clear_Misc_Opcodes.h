@@ -45,7 +45,7 @@ void M6507::NOP(){
 }
 //BRK
 void M6507::BRK(){
-    //RESET
+    this->P_brk_command(true);
 }
 
 #endif	/* M6507_SET_CLEAR_MISC_OPCODES_H */

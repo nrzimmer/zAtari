@@ -161,7 +161,7 @@ void M6507::S(char valor) {
     this->reg_s = valor;
 }
 
-void M6507::PC(short int valor) {
+void M6507::PC(unsigned short int valor) {
     char valor_temp = 0;
     this->reg_pc = valor;
     if ((valor - 32768) >= 0) {
@@ -200,14 +200,6 @@ void M6507::PC(short int valor) {
     this->reg_pc_l = (char) valor;
 }
 
-void M6507::PC(char valor_l, char valor_h) {
-    this->reg_pc = (int) valor_l + (256 * (int) valor_h);
-    this->reg_pc_l = valor_l;
-    this->reg_pc_h = valor_h;
-}
-
-#endif	/* M6507_REG_OPERATIONS_H */
-
 void M6507::update_zero_flag(char valor) {
     if (valor == 0)
         this->P_zero(true);
@@ -216,10 +208,7 @@ void M6507::update_zero_flag(char valor) {
 }
 
 void M6507::update_negative_flag(char valor) {
-    if (valor == 0)
-        this->P_negative(true);
-    else
-        this->P_negative(false);
+    this->P_negative(get_bit(valor,7));
 }
 
 void M6507::update_overflow_flag(short int valor) {
@@ -247,3 +236,5 @@ void M6507::P(char valor) {
     this->reg_overflow = valor & (1 << 6);
     this->reg_negative = valor & (1 << 7);
 }
+
+#endif	/* M6507_REG_OPERATIONS_H */

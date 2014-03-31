@@ -8,9 +8,6 @@
 #ifndef M6507_SUB_JUMP_OPCODES_H
 #define	M6507_SUB_JUMP_OPCODES_H
 
-#include "M6507.h"
-
-
 //Subroutine and Jump OPCODE
 //JMP
 
@@ -25,52 +22,31 @@ void M6507::JMP_indirect(unsigned short int addr) {
 //JSR
 
 void M6507::JSR(unsigned short int addr) {
-    this->MemoryWrite(256 + this->S(), this->PC_H());
-    if (this->S() == 0)
-        this->S(255);
-    else
-        this->S(this->S() - 1);
-    this->MemoryWrite(256 + this->S(), this->PC_L());
-    if (this->S() == 0)
-        this->S(255);
-    else
-        this->S(this->S() - 1);
+    unsigned char lo,hi;
+    hi = this->PC_H();
+    lo = this->PC_L();
+    this->push_stack(hi);
+    this->push_stack(lo);
     this->PC(addr);
 }
 //RTS
 
 void M6507::RTS() {
-    unsigned char lo;
-    if (this->S() == 255)
-        this->S(0);
-    else
-        this->S(this->S() + 1);
-    lo = this->MemoryRead(256 + this->S());
-    if (this->S() == 255)
-        this->S(0);
-    else
-        this->S(this->S() + 1);
-    this->PC(lo,this->MemoryRead(256 + this->S()));
-    this->PC(this->PC() + 1);
+    unsigned char lo,hi;
+    unsigned short int destaddr;
+    lo = this->pop_stack();
+    hi = this->pop_stack();
+    destaddr = make_word(lo,hi);
+    this->PC(destaddr);
 }
 //RTI
 void M6507::RTI(){
-    if (this->S() == 255)
-        this->S(0);
-    else
-        this->S(this->S() + 1);
-    this->P(this->MemoryRead(256 + this->S()));
-    unsigned char lo;
-    if (this->S() == 255)
-        this->S(0);
-    else
-        this->S(this->S() + 1);
-    lo = this->MemoryRead(256 + this->S());
-    if (this->S() == 255)
-        this->S(0);
-    else
-        this->S(this->S() + 1);
-    this->PC(lo,this->MemoryRead(256 + this->S()));
+    unsigned char lo,hi;
+    unsigned short int destaddr;
+    lo = this->pop_stack();
+    hi = this->pop_stack();
+    destaddr = make_word(lo,hi);
+    this->PC(destaddr);
 }
 
 

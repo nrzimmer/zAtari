@@ -7,7 +7,7 @@
 #ifndef UTIL_H
 #define	UTIL_H
 
-short int make_word(char lo, char hi) {
+short int make_word(unsigned char lo, unsigned char hi) {
     return (short int) lo | ((short int) hi << 8);
 }
 

@@ -27,7 +27,6 @@
     <logicalFolder name="SourceFiles"
                    displayName="Source Files"
                    projectFiles="true">
-      <itemPath>M6507.cpp</itemPath>
       <itemPath>main.cpp</itemPath>
     </logicalFolder>
     <logicalFolder name="TestFiles"
@@ -52,8 +51,6 @@
       </toolsSet>
       <compileType>
       </compileType>
-      <item path="M6507.cpp" ex="false" tool="1" flavor2="0">
-      </item>
       <item path="M6507.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="M6507_Arithmetic_Opcodes.h" ex="false" tool="3" flavor2="0">
@@ -107,8 +104,6 @@
           <developmentMode>5</developmentMode>
         </asmTool>
       </compileType>
-      <item path="M6507.cpp" ex="false" tool="1" flavor2="0">
-      </item>
       <item path="M6507.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="M6507_Arithmetic_Opcodes.h" ex="false" tool="3" flavor2="0">
