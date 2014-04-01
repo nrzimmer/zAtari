@@ -62,7 +62,7 @@ int main(int argc, char** argv) {
         printf("%2x\n\nPC: %4x\tA: %2x\tX: %2x\tY: %2x\tS: %2x\n\n", (unsigned char)emu.last_instruction, (unsigned short int)emu.PC(), (unsigned char)emu.A(), (unsigned char)emu.X(), (unsigned char)emu.Y(), (unsigned char)emu.S());
         printf("P: %i%i-%i%i%i%i%i\n   NV-BDIZC\n\n", emu.P_negative(), emu.P_overflow(), emu.P_brk_command(), emu.P_decimal_mode(), emu.P_irq_disable(), emu.P_zero(), emu.P_carry());
         //std::cin.get();
-        delay(10);
+        //delay(10);
         emu.step();
     }
     std::cin.get();

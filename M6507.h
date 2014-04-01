@@ -501,8 +501,20 @@ void M6507::MemoryWrite(unsigned short int addr, char valor) {
                                     this->memory_block[addr + (0x20 * loop2) + 8] = valor;
                                 }
                             }
-                        } else
-                            this->memory_block[addr] = valor;
+                        } else {
+                            if (addr < 0x80) {
+                                int loop;
+                                for (loop = 0; loop < 16; loop++) {
+                                    this->memory_block[addr + (0x100 * loop)] = valor;
+                                    if (addr < 0x40) {
+                                        this->memory_block[addr + 0x40 + (0x100 * loop)] = valor;
+                                    } else {
+                                        this->memory_block[addr - 0x40 + (0x100 * loop)] = valor;
+                                    }
+                                }
+                            } else
+                                this->memory_block[addr] = valor;
+                        }
                     }
                 }
             }
@@ -512,15 +524,15 @@ void M6507::MemoryWrite(unsigned short int addr, char valor) {
 
 unsigned char M6507::pop_stack() {
     unsigned char sp = this->S();
-    sp -= 1;
+    sp += 1;
     this->S(sp);
-    return this->MemoryRead(511 - sp);
+    return this->MemoryRead(0x80 + sp);
 }
 
 void M6507::push_stack(unsigned char valor) {
     unsigned char sp = this->S();
-    this->MemoryWrite(511 - sp, valor);
-    sp += 1;
+    this->MemoryWrite(0x80 + sp, valor);
+    sp -= 1;
     this->S(sp);
 }
 
