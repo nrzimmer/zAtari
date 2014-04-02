@@ -8,89 +8,89 @@
 #ifndef M6507_H
 #define	M6507_H9
 
-#define v_carry 1;
-#define v_zero 2;
-#define v_irq_disable 4;
-#define v_decimal_mode 8;
-#define v_brk_command 16;
-#define v_overflow 64;
-#define v_negative 128;
+#define v_carry 1
+#define v_zero 2
+#define v_irq_disable 4
+#define v_decimal_mode 8
+#define v_brk_command 16
+#define v_overflow 64
+#define v_negative 128
 
 //TIA - WRITE ADDRESS SUMMARY (Write only)
-#define VSYNC 0x00; //......1.  vertical sync set-clear
-#define VBLANK 0x01; //11....1.  vertical blank set-clear
-#define WSYNC 0x02; //<strobe>  wait for leading edge of horizontal blank
-#define RSYNC 0x03; //<strobe>  reset horizontal sync counter
-#define NUSIZ0 0x04; //..111111  number-size player-missile 0
-#define NUSIZ1 0x05; //..111111  number-size player-missile 1
-#define COLUP0 0x06; //1111111.  color-lum player 0 and missile 0
-#define COLUP1 0x07; //1111111.  color-lum player 1 and missile 1
-#define COLUPF 0x08; //1111111.  color-lum playfield and ball
-#define COLUBK 0x09; //1111111.  color-lum background
-#define CTRLPF 0x0A; //..11.111  control playfield ball size & collisions
-#define REFP0 0x0B; //....1...  reflect player 0
-#define REFP1 0x0C; //....1...  reflect player 1
-#define PF0 0x0D; //1111....  playfield register byte 0
-#define PF1 0x0E; //11111111  playfield register byte 1
-#define PF2 0x0F; //11111111  playfield register byte 2
-#define RESP0 0x10; //<strobe>  reset player 0
-#define RESP1 0x11; //<strobe>  reset player 1
-#define RESM0 0x12; //<strobe>  reset missile 0
-#define RESM1 0x13; //<strobe>  reset missile 1
-#define RESBL 0x14; //<strobe>  reset ball
-#define AUDC0 0x15; //....1111  audio control 0
-#define AUDC1 0x16; //....1111  audio control 1
-#define AUDF0 0x17; //...11111  audio frequency 0
-#define AUDF1 0x18; //...11111  audio frequency 1
-#define AUDV0 0x19; //....1111  audio volume 0
-#define AUDV1 0x1A; //....1111  audio volume 1
-#define GRP0 0x1B; //11111111  graphics player 0
-#define GRP1 0x1C; //11111111  graphics player 1
-#define ENAM0 0x1D; //......1.  graphics (enable) missile 0
-#define ENAM1 0x1E; //......1.  graphics (enable) missile 1
-#define ENABL 0x1F; //......1.  graphics (enable) ball
-#define HMP0 0x20; //1111....  horizontal motion player 0
-#define HMP1 0x21; //1111....  horizontal motion player 1
-#define HMM0 0x22; //1111....  horizontal motion missile 0
-#define HMM1 0x23; //1111....  horizontal motion missile 1
-#define HMBL 0x24; //1111....  horizontal motion ball
-#define VDELP0 0x25; //.......1  vertical delay player 0
-#define VDELP1 0x26; //.......1  vertical delay player 1
-#define VDELBL 0x27; //.......1  vertical delay ball
-#define RESMP0 0x28; //......1.  reset missile 0 to player 0
-#define RESMP1 0x29; //......1.  reset missile 1 to player 1
-#define HMOVE 0x2A; //<strobe>  apply horizontal motion
-#define HMCLR 0x2B; //<strobe>  clear horizontal motion registers
-#define CXCLR 0x2C; //<strobe>  clear collision latches
+#define VSYNC 0x00 //......1.  vertical sync set-clear
+#define VBLANK 0x01 //11....1.  vertical blank set-clear
+#define WSYNC 0x02 //<strobe>  wait for leading edge of horizontal blank
+#define RSYNC 0x03 //<strobe>  reset horizontal sync counter
+#define NUSIZ0 0x04 //..111111  number-size player-missile 0
+#define NUSIZ1 0x05 //..111111  number-size player-missile 1
+#define COLUP0 0x06 //1111111.  color-lum player 0 and missile 0
+#define COLUP1 0x07 //1111111.  color-lum player 1 and missile 1
+#define COLUPF 0x08 //1111111.  color-lum playfield and ball
+#define COLUBK 0x09 //1111111.  color-lum background
+#define CTRLPF 0x0A //..11.111  control playfield ball size & collisions
+#define REFP0 0x0B //....1...  reflect player 0
+#define REFP1 0x0C //....1...  reflect player 1
+#define PF0 0x0D //1111....  playfield register byte 0
+#define PF1 0x0E //11111111  playfield register byte 1
+#define PF2 0x0F //11111111  playfield register byte 2
+#define RESP0 0x10 //<strobe>  reset player 0
+#define RESP1 0x11 //<strobe>  reset player 1
+#define RESM0 0x12 //<strobe>  reset missile 0
+#define RESM1 0x13 //<strobe>  reset missile 1
+#define RESBL 0x14 //<strobe>  reset ball
+#define AUDC0 0x15 //....1111  audio control 0
+#define AUDC1 0x16 //....1111  audio control 1
+#define AUDF0 0x17 //...11111  audio frequency 0
+#define AUDF1 0x18 //...11111  audio frequency 1
+#define AUDV0 0x19 //....1111  audio volume 0
+#define AUDV1 0x1A //....1111  audio volume 1
+#define GRP0 0x1B //11111111  graphics player 0
+#define GRP1 0x1C //11111111  graphics player 1
+#define ENAM0 0x1D //......1.  graphics (enable) missile 0
+#define ENAM1 0x1E //......1.  graphics (enable) missile 1
+#define ENABL 0x1F //......1.  graphics (enable) ball
+#define HMP0 0x20 //1111....  horizontal motion player 0
+#define HMP1 0x21 //1111....  horizontal motion player 1
+#define HMM0 0x22 //1111....  horizontal motion missile 0
+#define HMM1 0x23 //1111....  horizontal motion missile 1
+#define HMBL 0x24 //1111....  horizontal motion ball
+#define VDELP0 0x25 //.......1  vertical delay player 0
+#define VDELP1 0x26 //.......1  vertical delay player 1
+#define VDELBL 0x27 //.......1  vertical delay ball
+#define RESMP0 0x28 //......1.  reset missile 0 to player 0
+#define RESMP1 0x29 //......1.  reset missile 1 to player 1
+#define HMOVE 0x2A //<strobe>  apply horizontal motion
+#define HMCLR 0x2B //<strobe>  clear horizontal motion registers
+#define CXCLR 0x2C //<strobe>  clear collision latches
 
 //TIA - READ ADDRESS SUMMARY (Read only)
-#define CXM0P 0x30; //11......  read collision M0-P1, M0-P0 (Bit 7,6)
-#define CXM1P 0x31; //11......  read collision M1-P0, M1-P1
-#define CXP0FB 0x32; //11......  read collision P0-PF, P0-BL
-#define CXP1FB 0x33; //11......  read collision P1-PF, P1-BL
-#define CXM0FB 0x34; //11......  read collision M0-PF, M0-BL
-#define CXM1FB 0x35; //11......  read collision M1-PF, M1-BL
-#define CXBLPF 0x36; //1.......  read collision BL-PF, unused
-#define CXPPMM 0x37; //11......  read collision P0-P1, M0-M1
-#define INPT0 0x38; //1.......  read pot port
-#define INPT1 0x39; //1.......  read pot port
-#define INPT2 0x3A; //1.......  read pot port
-#define INPT3 0x3B; //1.......  read pot port
-#define INPT4 0x3C; //1.......  read input
-#define INPT5 0x3D; //1.......  read input
+#define CXM0P 0x30 //11......  read collision M0-P1, M0-P0 (Bit 7,6)
+#define CXM1P 0x31 //11......  read collision M1-P0, M1-P1
+#define CXP0FB 0x32 //11......  read collision P0-PF, P0-BL
+#define CXP1FB 0x33 //11......  read collision P1-PF, P1-BL
+#define CXM0FB 0x34 //11......  read collision M0-PF, M0-BL
+#define CXM1FB 0x35 //11......  read collision M1-PF, M1-BL
+#define CXBLPF 0x36 //1.......  read collision BL-PF, unused
+#define CXPPMM 0x37 //11......  read collision P0-P1, M0-M1
+#define INPT0 0x38 //1.......  read pot port
+#define INPT1 0x39 //1.......  read pot port
+#define INPT2 0x3A //1.......  read pot port
+#define INPT3 0x3B //1.......  read pot port
+#define INPT4 0x3C //1.......  read input
+#define INPT5 0x3D //1.......  read input
 
 //PIA 6532 - RAM, Switches, and Timer (Read/Write)
 //80..FF  RAM     11111111  128 bytes RAM (in PIA chip) for variables and stack
-#define SWCHA 0x280; //11111111  Port A; input or output  (read or write)
-#define SWACNT 0x281; //11111111  Port A DDR, 0= input, 1=output
-#define SWCHB 0x282; //11111111  Port B; console switches (read only)
-#define SWBCNT 0x283; //11111111  Port B DDR (hardwired as input)
-#define INTIM 0x284; //11111111  Timer output (read only)
-#define INSTAT 0x285; //11......  Timer Status (read only, undocumented)
-#define TIM1T 0x294; //11111111  set 1 clock interval (838 nsec/interval)
-#define TIM8T 0x295; //11111111  set 8 clock interval (6.7 usec/interval)
-#define TIM64T 0x296; //11111111  set 64 clock interval (53.6 usec/interval)
-#define T1024T 0x297; //11111111  set 1024 clock interval (858.2 usec/interval)
+#define SWCHA 0x280 //11111111  Port A; input or output  (read or write)
+#define SWACNT 0x281 //11111111  Port A DDR, 0= input, 1=output
+#define SWCHB 0x282 //11111111  Port B; console switches (read only)
+#define SWBCNT 0x283 //11111111  Port B DDR (hardwired as input)
+#define INTIM 0x284 //11111111  Timer output (read only)
+#define INSTAT 0x285 //11......  Timer Status (read only, undocumented)
+#define TIM1T 0x294 //11111111  set 1 clock interval (838 nsec/interval)
+#define TIM8T 0x295 //11111111  set 8 clock interval (6.7 usec/interval)
+#define TIM64T 0x296 //11111111  set 64 clock interval (53.6 usec/interval)
+#define T1024T 0x297 //11111111  set 1024 clock interval (858.2 usec/interval)
 
 class M6507 {
 protected:
