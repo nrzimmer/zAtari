@@ -1,0 +1,3 @@
+Projeto "temporariamente" abandonado.
+
+Existe a possibilidade de eu voltar a trabalhar no mesmo, mas se isso ocorrer eu irei "começar do zero" novamente, pois não estou gostando do código fonte atual...
