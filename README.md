@@ -1,3 +1,4 @@
-Projeto "temporariamente" abandonado.
+Futuro emulador de atari.
+Desenvolvido em C++.
 
-Existe a possibilidade de eu voltar a trabalhar no mesmo, mas se isso ocorrer eu irei "começar do zero" novamente, pois não estou gostando do código fonte atual...
+Para os testes estou utilizando a ROM do River Raid (rr.a26)
