@@ -352,3 +352,13 @@ unsigned char M6507::get_opcode() {
 unsigned short int M6507::get_opcode_pc() {
 	return this->opcode_pc;
 }
+
+unsigned char M6507::fetch_data() {
+	this->data = this->MemoryRead(this->PC()->get());
+	return this->data;
+}
+
+unsigned char M6507::fetch_data(unsigned short int addr) {
+	this->data = this->MemoryRead(addr);
+	return this->data;
+}

@@ -24,8 +24,8 @@ bool get_bit(unsigned char valor, unsigned char bit) {
     return valor & (1 << bit);
 }
 
-unsigned char ZeroPage(unsigned short int valor) {
-	return (unsigned char) valor & 0xFF;
+unsigned short int ZeroPage(unsigned short int valor) {
+	return (unsigned short int) valor & 0xFF;
 }
 
 unsigned char random_char() {

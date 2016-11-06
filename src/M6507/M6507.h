@@ -157,20 +157,20 @@
 
 
 //Address modes
-#define	implied		0x00
-#define	indirectX	0x01
-#define	none		0x02
-#define	zeropage	0x03
-#define	immidiate	0x04
-#define	accumulator	0x05
-#define	absolute	0x06
-#define	relative	0x07
-#define	indirectY	0x08
-#define	zeropageX	0x09
-#define	absoluteY	0x0A
-#define	absoluteX	0x0B
-#define	indirect	0x0C
-#define	zeropageY	0x0D
+#define	_implied			0x00
+#define	_indexedIndirect	0x01
+#define	_none				0x02
+#define	_zeropage			0x03
+#define	_immediate			0x04
+#define	_accumulator		0x05
+#define	_absolute			0x06
+#define	_relative			0x07
+#define	_indirectIndexed	0x08
+#define	_zeropageX			0x09
+#define	_absoluteY			0x0A
+#define	_absoluteX			0x0B
+#define	_indirect			0x0C
+#define	_zeropageY			0x0D
 
 class M6507_Register_8BIT {
 	protected:
@@ -338,6 +338,9 @@ protected:
     void update_carry_flag(unsigned short int valor);
     //void push_stack(unsigned char valor);
     //unsigned char pop_stack();
+    unsigned char fetch_data();
+    unsigned char fetch_data(unsigned short int addr);
+    unsigned char data;
     unsigned char opcode;
     unsigned char opcode_byte_lo;
     unsigned char opcode_byte_hi;
@@ -366,6 +369,79 @@ public:
     M6507_Register_8BIT* S();
     M6507_Status_Register* P();
     M6507_Program_Counter* PC();
+    
+    //OPCodes
+    void ADC();
+	void AHX();
+	void ALR();
+	void ANC();
+	void AND();
+	void ARR();
+	void ASL();
+	void AXS();
+	void BCC();
+	void BCS();
+	void BEQ();
+	void BIT();
+	void BMI();
+	void BNE();
+	void BPL();
+	void BRK();
+	void BVC();
+	void CLC();
+	void CLD();
+	void CLI();
+	void CLV();
+	void CMP();
+	void CPX();
+	void CPY();
+	void DCP();
+	void DEC();
+	void EOR();
+	void INC();
+	void INX();
+	void INY();
+	void ISC();
+	void JMP();
+	void JSR();
+	void KIL();
+	void LAS();
+	void LAX();
+	void LDA();
+	void LDX();
+	void LDY();
+	void LSR();
+	void NOP();
+	void ORA();
+	void PHA();
+	void PHP();
+	void PLA();
+	void RLA();
+	void ROL();
+	void ROR();
+	void RRA();
+	void RTI();
+	void RTS();
+	void SAX();
+	void SBC();
+	void SEC();
+	void SED();
+	void SEI();
+	void SHA();
+	void SHY();
+	void SLO();
+	void SRE();
+	void STA();
+	void STX();
+	void STY();
+	void TAS();
+	void TAX();
+	void TAY();
+	void TSX();
+	void TXA();
+	void TXS();
+	void TYA();
+	void XAA();
 };
 
 #endif	/* M6507_H */
