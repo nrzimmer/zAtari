@@ -1,8 +1,9 @@
 NAME		=	zAtari
 CXX			=	g++
-RM			=	rm	-vf
+RM			=	rm	-f
 SRC			=	src/main.cpp							\
 				src/M6507/M6507.cpp						\
+				src/M6507/opcodes.cpp					\
 				src/M6507/step.cpp						\
 				src/M6507/registers/Program_Counter.cpp	\
 				src/M6507/registers/Register_8BIT.cpp	\
@@ -10,33 +11,35 @@ SRC			=	src/main.cpp							\
 				src/util/data_manipulation.cpp
 	
 OBJ			=	$(subst src/,obj/, $(subst .cpp,.o, $(SRC)))
-LDFLAGS		=	-lstdc++
-FLAGS		=	-O0 -std=c++11 -Wall -g
-
-all: $(NAME)
-
-obj:
-	mkdir $@
-	
-obj/M6507:
-	mkdir $@
-
-obj/M6507/registers:
-	mkdir $@
-	
-obj/util:
-	mkdir $@
-
-obj/%.o: src/%.cpp src/M6507/M6507.h | obj obj/M6507 obj/M6507/registers obj/util
-	$(CXX) -c $< -o $@ $(FLAGS)
+LDFLAGS		=	-lstdc++ -g
+FLAGS		=	-O0 -std=c++11 -Wall -Wextra -g
 
 zAtari: $(OBJ)
-	$(CXX) $^ -o $@ $(LDFLAGS) $(FLAGS)
+	@echo -e "\t[LD]\t$^\n\t\t$@"
+	@$(CXX) $^ -o $@ $(LDFLAGS)
+
+obj:
+	@mkdir -p $@
+	
+obj/M6507:
+	@mkdir -p $@
+
+obj/M6507/registers:
+	@mkdir -p $@
+	
+obj/util:
+	@mkdir -p $@
+
+obj/%.o: src/%.cpp src/M6507/M6507.h | obj obj/M6507 obj/M6507/registers obj/util
+	@echo -e "\t[CC]\t$<\n\t\t$@"
+	@$(CXX) -c $< -o $@ $(FLAGS)
 
 clean:
-	$(RM) $(OBJ) *~
-	$(RM) $(NAME)
+	@echo -e "\nRemoving OBJ and temp files"
+	@$(RM) $(OBJ) *~
+	@echo -e "Removing executable\n"
+	@$(RM) $(NAME)
 
-rebuild: clean zAtari
+re: clean all
 
-.PHONY: all clean zAtari
+.PHONY: clean re
